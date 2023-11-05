@@ -1,10 +1,10 @@
-class myPromise {
+class MyPromise {
   static PENDING = 'pending';
   static FULFILLED = 'fulfilled';
   static REJECTED = 'rejected';
 
   constructor(executor) {
-    this.PromiseState = myPromise.PENDING;
+    this.PromiseState = MyPromise.PENDING;
     this.PromiseResult = null;
     this.onFulfilledCallbacks = []; //保存resolve的回调
     this.onRejectedCallbacks = []; //保存reject的回调
@@ -19,16 +19,16 @@ class myPromise {
   }
 
   resolve(result) {
-    if (this.PromiseState === myPromise.PENDING) {
-      this.PromiseState = myPromise.FULFILLED;
+    if (this.PromiseState === MyPromise.PENDING) {
+      this.PromiseState = MyPromise.FULFILLED;
       this.PromiseResult = result;
       // 遍历队列执行回调
       this.onFulfilledCallbacks.forEach(callback => callback(result));
     }
   }
   reject(reason) {
-    if (this.PromiseState === myPromise.PENDING) {
-      this.PromiseState = myPromise.REJECTED;
+    if (this.PromiseState === MyPromise.PENDING) {
+      this.PromiseState = MyPromise.REJECTED;
       this.PromiseResult = reason;
       // 遍历队列执行回调
       this.onRejectedCallbacks.forEach(callback => callback(reason));
@@ -37,27 +37,27 @@ class myPromise {
 
   // 使用原生微任务queueMicrotask
   then(onFulfilled, onRejected) {
-    let promise2 = new myPromise((resolve, reject) => {
-      if (this.PromiseState === myPromise.FULFILLED) {
+    let promise2 = new MyPromise((resolve, reject) => {
+      if (this.PromiseState === MyPromise.FULFILLED) {
         queueMicrotask(() => {
           try {
             if (typeof onFulfilled !== 'function') {  //2.2.7.3
               resolve(this.PromiseResult);
             } else {
-              let x = onFulfilled(this.PromiseResult);
+              const x = onFulfilled(this.PromiseResult);
               resolvePromise(promise2, x, resolve, reject); //2.2.7.1
             }
           } catch (e) {  //2.2.7.2 
             reject(e);
           }
         });
-      } else if (this.PromiseState === myPromise.REJECTED) {
+      } else if (this.PromiseState === MyPromise.REJECTED) {
         queueMicrotask(() => {
           try {
             if (typeof onRejected !== 'function') {
               reject(this.PromiseResult); //2.2.7.4
             } else {
-              let x = onRejected(this.PromiseResult);
+              const x = onRejected(this.PromiseResult);
               resolvePromise(promise2, x, resolve, reject);
             }
           } catch (e) {
@@ -65,14 +65,14 @@ class myPromise {
           }
         });
         // 状态为pending，则将成功或失败的回调函数进队列
-      } else if (this.PromiseState === myPromise.PENDING) {
+      } else if (this.PromiseState === MyPromise.PENDING) {
         this.onFulfilledCallbacks.push(() => {
           queueMicrotask(() => {
             try {
               if (typeof onFulfilled !== 'function') {
                 resolve(this.PromiseResult);
               } else {
-                let x = onFulfilled(this.PromiseResult);
+                const x = onFulfilled(this.PromiseResult);
                 resolvePromise(promise2, x, resolve, reject);
               }
             } catch (e) {
@@ -114,7 +114,7 @@ function resolvePromise(promise2, x, resolve, reject) {
   // 2.3.1 x 与 promise 相等
   if (x === promise2) throw new TypeError('Chaining cycle detected for promise');
   // 2.3.2 如果 x 为 Promise 对象(继续执行x（啥也不干），若遇到y，则继续解析y)
-  if (x instanceof myPromise) {
+  if (x instanceof MyPromise) {
     x.then(y => {
       resolvePromise(promise2, y, resolve, reject);
     }, reject);
@@ -156,13 +156,13 @@ function resolvePromise(promise2, x, resolve, reject) {
 
 }
 
-myPromise.deferred = function () {
+MyPromise.deferred = function () {
   let result = {};
-  result.promise = new myPromise((resolve, reject) => {
+  result.promise = new MyPromise((resolve, reject) => {
     result.resolve = resolve;
     result.reject = reject;
   });
   return result;    //返回一个包含{ promise, resolve, reject }的对象
 }
 
-module.exports = myPromise;
+module.exports = MyPromise;
